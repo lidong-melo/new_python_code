@@ -21,11 +21,6 @@ class my_clock:
         
     def stop(self):
         print('clock stop')
-
-
-# udp_msg = message.udp_msg()
-# ui_msg = message.ui_msg()
-# err_msg = message.err_msg()  
         
     
 def send_udp_msg(msg):
@@ -41,7 +36,7 @@ def update_ui(msg):
 meeting_clock = my_clock()
 
 
-def new_thread_state_machine():
+def new_pi_state():
     state = 'READY'
     SECOND = 50
     READY_TIMEOUT = 3
@@ -61,8 +56,7 @@ def new_thread_state_machine():
             msg = message.udp_msg.pop()
         # for debug end        
             
-        
-        #print('.', end='')
+            
         #ready
         #wait 3s for ack, send msg to tx2
         if state == 'READY':
@@ -268,4 +262,4 @@ def new_thread_state_machine():
                 
                 
 
-_thread.start_new_thread(new_thread_state_machine(),())
+_thread.start_new_thread(new_pi_state(),())

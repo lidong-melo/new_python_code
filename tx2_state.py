@@ -23,7 +23,7 @@ def update_ui(msg):
 
 
 
-def new_thread_state_machine():
+def new_tx2_state():
     state = 'READY'
     SECOND = 50
     READY_TIMEOUT = 3
@@ -43,10 +43,8 @@ def new_thread_state_machine():
             msg = message.udp_msg.pop()
         # for debug end
             
-        
-        #print('.', end='')
         #ready
-        #wait 3s for ack, send msg to tx2
+        #wait 3s for ack, send msg to pi
         if state == 'READY':
             
             timeout-=1
@@ -55,10 +53,9 @@ def new_thread_state_machine():
                 timeout = READY_TIMEOUT * SECOND
             msg = message.ui_msg.pop()
             msg = message.udp_msg.pop()
-            if msg == 'tx2_ready':
+            if msg == 'pi_ready':
                 state = 'IDLE'
-                update_ui('set_to_idle')
-                send_udp_msg('pi_idle')
+                send_udp_msg('tx2_idle')
                 print(state)
             elif msg.find('error') != -1:
                 state = 'ERROR'
@@ -68,9 +65,13 @@ def new_thread_state_machine():
         #error
         #log error msg
         elif state == 'ERROR':
-            msg = message.err_msg.pop()
-            print('err_msg =', msg)
-            state = 'READY'
+            while 1:
+                msg = message.err_msg.pop()
+                if msg != 'NONE':
+                    print('err_msg =', msg)
+                else:
+                    break
+            state = 'READY'    
             print(state)
             
             
@@ -241,4 +242,4 @@ def new_thread_state_machine():
                 
                 
 
-_thread.start_new_thread(new_thread_state_machine(),())
+_thread.start_new_thread(new_tx2_state(),())

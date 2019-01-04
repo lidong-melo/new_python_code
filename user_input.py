@@ -1,10 +1,24 @@
-import udp_host
+import udp
+import _thread
 
 
-def user_input():
+def auto_recv(udp):
     while 1:
-        msg= input("input msg:")
-        udp_host.tx2_udp_send(msg)
+        msg = myhost.get_msg()
+        if msg != 'NONE':
+            print(msg)
+        pass       
+
+myhost = udp.class_host('127.0.0.1', 61101)
+
+_thread.start_new_thread(auto_recv, (myhost,))
+_thread.start_new_thread(auto_recv, (myhost,))
 
 
-user_input()
+
+while 1:
+    msg= input("input msg:")
+    myhost.send_msg(msg)
+    
+
+    
