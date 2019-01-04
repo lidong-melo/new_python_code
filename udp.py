@@ -5,7 +5,7 @@ import _thread
 import json
 import time
 import message
-
+import traceback
 
 
 class class_host:
@@ -29,14 +29,13 @@ class class_host:
                 break
             except:
                 time.sleep(1)
-                print('wait_for_client_pppd_service!!!!!!')        
+                print('wait_for_client...')      
 
     def send_msg(self, udp_msg):
         try:
             json_string = json.dumps(udp_msg)
             address_tuple = tuple(self.client_list)
             try:
-                print(json_string)
                 self.socket.sendto(json_string.encode(), address_tuple)
                 print('send', address_tuple, json_string)
             except:
@@ -68,7 +67,7 @@ class class_client:
         while 1:
             try:
                 self.socket = socket(AF_INET,SOCK_DGRAM)
-                print(self.socket.connect((ip,port)))
+                self.socket.connect((ip,port))
                 self.connection = True
                 #print('connection ok!')
                 _thread.start_new_thread(thread_client_recv, (self,))
@@ -76,7 +75,6 @@ class class_client:
                 break
             except:
                 time.sleep(1)
-                print('wait_for_host_pppd_service!!!!!!')
         
     def send_msg(self, udp_msg):
         try:
@@ -84,6 +82,8 @@ class class_client:
             self.socket.sendall(json_string.encode())
             print('send msg:',json_string)
         except:
+            #print 'str(Exception):\t', str(Exception)
+            #print (str(e))
             print('send msg error. connection disappear when send msg')
     
     def get_msg(self):
@@ -119,7 +119,6 @@ def thread_host_recv(insta):
             recv_msg_dict.clear()
             
         except:
-            print('wait_for_client...')
             pass
 
       

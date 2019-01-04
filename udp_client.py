@@ -15,7 +15,7 @@ class class_client:
         while 1:
             try:
                 self.socket = socket(AF_INET,SOCK_DGRAM)
-                print(self.socket.connect((ip,port)))
+                self.socket.connect((ip,port))
                 self.connection = True
                 #print('connection ok!')
                 _thread.start_new_thread(thread_client_recv, (self,))
@@ -63,27 +63,27 @@ def thread_client_recv(insta):
             print('wait_for_host...')
 
             
-def thread_host_recv(insta):
-    while insta.connection == True:
-        try:
-            print('recv...')
-            # update client ip -->
-            recv_data,address_recv = insta.socket.recvfrom(1024)
-            insta.client_list.clear()
-            client_list_temp = list(address_recv)
-            insta.client_list.append(client_list_temp[0])
-            insta.client_list.append(client_list_temp[1])
-            print('recv',insta.client_list,recv_data)
-            # <-- update client ip
+# def thread_host_recv(insta):
+    # while insta.connection == True:
+        # try:
+            # print('recv...')
+            # # update client ip -->
+            # recv_data,address_recv = insta.socket.recvfrom(1024)
+            # insta.client_list.clear()
+            # client_list_temp = list(address_recv)
+            # insta.client_list.append(client_list_temp[0])
+            # insta.client_list.append(client_list_temp[1])
+            # print('recv',insta.client_list,recv_data)
+            # # <-- update client ip
             
             
-            recv_str = recv_data.decode()
-            recv_msg_dict = json.loads(recv_str)
-            insta.recv_msg.push(recv_msg_dict)
-            recv_msg_dict.clear()
+            # recv_str = recv_data.decode()
+            # recv_msg_dict = json.loads(recv_str)
+            # insta.recv_msg.push(recv_msg_dict)
+            # recv_msg_dict.clear()
             
-        except:
-            pass
+        # except:
+            # pass
 
             
             
