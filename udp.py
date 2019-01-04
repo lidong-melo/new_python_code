@@ -29,21 +29,19 @@ class class_host:
                 break
             except:
                 time.sleep(1)
-                print('wait_for_pppd_service!!!!!!')        
+                print('wait_for_client_pppd_service!!!!!!')        
 
     def send_msg(self, udp_msg):
         try:
             json_string = json.dumps(udp_msg)
             address_tuple = tuple(self.client_list)
             try:
-                s.sendto(json_string.encode(), address_tuple)
+                print(json_string)
+                self.socket.sendto(json_string.encode(), address_tuple)
                 print('send', address_tuple, json_string)
             except:
                 print(address_tuple, 'disconnect')
-                
-            json_string = json.dumps(udp_msg)
-            self.socket.sendall(json_string.encode())
-            print('send msg:',json_string)
+
         except:
             print('send msg error. connection disappear when send msg')
     
@@ -78,7 +76,7 @@ class class_client:
                 break
             except:
                 time.sleep(1)
-                print('wait_for_pppd_service!!!!!!')
+                print('wait_for_host_pppd_service!!!!!!')
         
     def send_msg(self, udp_msg):
         try:
@@ -121,6 +119,7 @@ def thread_host_recv(insta):
             recv_msg_dict.clear()
             
         except:
+            print('wait_for_client...')
             pass
 
       
@@ -139,7 +138,6 @@ def thread_client_recv(insta):
             
         except:
             time.sleep(0.1)
-            print('wait_for_host...')
 
             
             
@@ -155,7 +153,10 @@ def thread_client_recv(insta):
 
 
     
-# for host test
+# # ##  for host test
+# myhost = class_host('127.0.0.1', 61101)
+# while 1:
+    # pass
 # myhost = class_host('127.0.0.1', 61101)
 # while 1:
     # msg = myhost.get_msg()

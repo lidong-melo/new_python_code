@@ -7,7 +7,7 @@ import message
 
 
 
-class client:
+class class_client:
     def __init__(self, ip, port):
         self.connection = False
         self.recv_msg = message.class_msg()

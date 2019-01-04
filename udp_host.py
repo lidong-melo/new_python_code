@@ -5,9 +5,10 @@ import _thread
 import json
 import time
 import message
+import traceback
 
 
-class host:
+class class_host:
     def __init__(self, ip, port):
         if platform.node().find('DESKTOP') != -1:
             server = {'IP':'127.0.0.1', 'PORT':61101}
@@ -35,15 +36,14 @@ class host:
             json_string = json.dumps(udp_msg)
             address_tuple = tuple(self.client_list)
             try:
-                s.sendto(json_string.encode(), address_tuple)
+                print(json_string.encode(), address_tuple)
+                self.socket.sendto(json_string.encode(), address_tuple)
                 print('send', address_tuple, json_string)
             except:
                 print(address_tuple, 'disconnect')
-                
-            json_string = json.dumps(udp_msg)
-            self.socket.sendall(json_string.encode())
-            print('send msg:',json_string)
-        except:
+        except e:
+            #print 'str(Exception):\t', str(Exception)
+            print (str(e))
             print('send msg error. connection disappear when send msg')
     
     def get_msg(self):
