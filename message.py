@@ -53,6 +53,8 @@ err_msg = class_msg()
 
 # Raspi - recv UDP:
 
+# tx2_alive
+
 # tx2_ready
 
 # tx2_idle
@@ -67,6 +69,8 @@ err_msg = class_msg()
 
 
 # Raspi - send UDP:
+
+# pi_alive
 
 # pi_ready
 

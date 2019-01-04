@@ -31,7 +31,7 @@ def thread_udp_recv():
             address_list_temp = list(address_recv)
             address_list.append(address_list_temp[0])
             address_list.append(address_list_temp[1])
-            print('recv',address_list,recv_data)
+            #print('recv',address_list,recv_data)
             # <-- update client ip
             
             # parse recv msg

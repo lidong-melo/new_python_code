@@ -1,26 +1,10 @@
 #import param
 import time
 import _thread
-import udp_client
+import udp_host
 
 import message
 
-        
-class my_clock:
-    def reset(self):
-        print('clock reset')
-        
-    def start(self):
-        print('clock start')
-        
-    def pause(self):
-        print('clock pause')
-        
-    def resume(self):
-        print('clock resume')
-        
-    def stop(self):
-        print('clock stop')
 
 
 # udp_msg = message.udp_msg()
@@ -37,8 +21,6 @@ def update_ui(msg):
     
     
 
-        
-meeting_clock = my_clock()
 
 
 def new_thread_state_machine():
@@ -50,9 +32,18 @@ def new_thread_state_machine():
     timeout = READY_TIMEOUT*SECOND # 3s
     while 1:
         time.sleep(0.02) #20ms
+        
+        # for debug
         msg = message.udp_msg.peek()
-        if msg == '?':
+        if msg == 'tx2_alive':
+            send_udp_msg('pi_alive')
+            msg = message.udp_msg.pop()    
+        elif msg == '?':
             print('state:',state)
+            msg = message.udp_msg.pop()
+        # for debug end
+            
+        
         #print('.', end='')
         #ready
         #wait 3s for ack, send msg to tx2
@@ -60,7 +51,7 @@ def new_thread_state_machine():
             
             timeout-=1
             if timeout == 0:
-                send_udp_msg('pi_ready')
+                send_udp_msg('tx2_ready')
                 timeout = READY_TIMEOUT * SECOND
             msg = message.ui_msg.pop()
             msg = message.udp_msg.pop()
@@ -110,7 +101,6 @@ def new_thread_state_machine():
                 state = 'RECORDING'
                 send_udp_msg('pi_recording')
                 update_ui('set_to_recording')
-                meeting_clock.start()
                 print(state)
             elif msg.find("error") != -1:
                 state = 'ERROR'
@@ -132,7 +122,6 @@ def new_thread_state_machine():
                 state = 'RECORDING'
                 send_udp_msg('pi_recording')
                 update_ui('set_to_recording')
-                meeting_clock.start()
                 print(state)
             elif msg.find("error") != -1:
                 state = 'ERROR'
@@ -162,13 +151,11 @@ def new_thread_state_machine():
                 state = 'PAUSE'
                 update_ui('set_to_pause')
                 send_udp_msg('pi_pause')
-                meeting_clock.pause()
                 print(state)
             elif msg == 'stop_meeting': #ui click stop
                 state = 'STOP_LOADING'
                 update_ui('set_to_stop_meeting')
                 send_udp_msg('pi_stop')
-                meeting_clock.stop()
                 timeout = STOP_TIMEOUT * SECOND
                 print(state)
             
@@ -177,7 +164,6 @@ def new_thread_state_machine():
                 state = 'STOP_LOADING'
                 update_ui('set_to_stop_meeting')
                 send_udp_msg('pi_stop')
-                meeting_clock.stop()
                 timeout = STOP_TIMEOUT * SECOND
                 print(state)
             elif msg.find("error") != -1:
@@ -210,13 +196,11 @@ def new_thread_state_machine():
                 state = 'RECORDING'
                 update_ui('set_to_resume')
                 send_udp_msg('pi_resume')
-                meeting_clock.resume()
                 print(state)
             elif msg == 'stop_meeting':# ui click stop
                 state = 'STOP_LOADING'
                 update_ui('set_to_stop_meeting')
                 send_udp_msg('pi_stop')
-                meeting_clock.stop()
                 timeout = STOP_TIMEOUT * SECOND
                 print(state)
             
@@ -225,7 +209,6 @@ def new_thread_state_machine():
                 state = 'STOP_LOADING'
                 update_ui('set_to_stop_meeting')
                 send_udp_msg('pi_stop')
-                meeting_clock.stop()
                 timeout = STOP_TIMEOUT * SECOND
                 print(state)
             elif msg.find("error") != -1:
@@ -249,7 +232,6 @@ def new_thread_state_machine():
                 state = 'IDLE'
                 update_ui('set_to_idle')
                 send_udp_msg('pi_idle')
-                meeting_clock.reset()
                 print(state)
             elif msg.find("error") != -1:
                 state = 'ERROR'
