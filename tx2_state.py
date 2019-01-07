@@ -1,25 +1,39 @@
 #import param
 import time
 import _thread
-import udp_host
+import udp
 
 import message
 
+debug = [1]
 
 
-# udp_msg = message.udp_msg()
-# ui_msg = message.ui_msg()
-# err_msg = message.err_msg()  
+class class_meeting:
+    def start(self):
+        print('meeting start')
+    def stop(self):
+        print('meeting stop')
+    def pause(self):
+        print('meeting pause')
+    def resume(self):
+        print('meeting resume')  
         
-    
-def send_udp_msg(msg):
-    udp_client.send_msg(msg)
-    print ('send_udp_msg:', msg)
-    
-def update_ui(msg):
-    print ('update ui:', msg)
-    
-    
+def find_app(state):
+    if debug[0] == 1:
+        if state == 'STOP_LOADING':
+            return False
+        else:
+            return True
+        
+        
+meeting = class_meeting()
+udp_link = udp.class_host('127.0.0.1', 61101)
+
+      
+
+def sound_control(msg):
+    print ('sound_control:', msg)
+        
 
 
 
@@ -32,184 +46,150 @@ def new_tx2_state():
     timeout = READY_TIMEOUT*SECOND # 3s
     while 1:
         time.sleep(0.02) #20ms
-        
+
         # for debug
-        msg = message.udp_msg.peek()
-        if msg == 'tx2_alive':
-            send_udp_msg('pi_alive')
-            msg = message.udp_msg.pop()    
+        msg = udp_link.peek_msg()
+        if msg == 'pi_alive':
+            udp_link.send_msg('tx2_alive')
+            msg = udp_link.get_msg()    
         elif msg == '?':
             print('state:',state)
-            msg = message.udp_msg.pop()
-        # for debug end
+            msg = udp_link.get_msg()
+        # for debug end        
+            
+            
+        
+                
+        #error
+        #log error msg
+        if state == 'ERROR':
+            msg = message.err_msg.pop()
+            print('err_msg =', msg)
+            timeout = READY_TIMEOUT*SECOND # 3s
+            state = 'READY'
+            print(state)
+            
             
         #ready
-        #wait 3s for ack, send msg to pi
-        if state == 'READY':
+        #wait 3s for ack, send msg to tx2
+        elif state == 'READY':
             
-            timeout-=1
-            if timeout == 0:
-                send_udp_msg('tx2_ready')
-                timeout = READY_TIMEOUT * SECOND
-            msg = message.ui_msg.pop()
-            msg = message.udp_msg.pop()
+            # timeout-=1
+            # if timeout == 0:
+                # udp_link.send_msg('tx2_ready')
+                # timeout = READY_TIMEOUT * SECOND
+                
+            # 清空ui_msg 队列    
+            msg = message.ui_msg.clear()
+            
+            msg = udp_link.get_msg()
             if msg == 'pi_ready':
                 state = 'IDLE'
-                send_udp_msg('tx2_idle')
+                udp_link.send_msg('tx2_idle')
                 print(state)
             elif msg.find('error') != -1:
                 state = 'ERROR'
                 message.err_msg.push('error:1')
                 print(state)
-        
-        #error
-        #log error msg
-        elif state == 'ERROR':
-            while 1:
-                msg = message.err_msg.pop()
-                if msg != 'NONE':
-                    print('err_msg =', msg)
-                else:
-                    break
-            state = 'READY'    
-            print(state)
             
-            
-                
-            
+                        
         #idle
         #wait for new meeting which is triggered by tx2 or user. response to volume button and wifi state.
         elif state == 'IDLE':
-            msg = message.ui_msg.pop()
-            if msg == 'volume_up':
-                send_udp_msg('pi_vol_up')
-                update_ui('set_to_vol_up')
-            elif msg == 'volume_down':
-                send_udp_msg('pi_vol_down')
-                update_ui('set_to_vol_down')
-            elif msg == 'wifi':
-                update_ui('set_to_wifi')
-            elif msg == 'start_meeting':
+            msg = udp_link.get_msg()
+            if msg == 'pi_vol_up':
+                sound_control('vol_up')
+            elif msg == 'pi_vol_down':
+                sound_control('vol_down')
+            elif msg == 'pi_start_meeting':
                 state = 'START_LOADING'
-                send_udp_msg('pi_start_meeting')
-                update_ui('set_to_start_loading')
-                timeout = START_TIMEOUT * SECOND # 3s
-                print(state)
-
-            # tx2端启动会议，应该直接进入recording模式
-            msg = message.udp_msg.pop()
-            if msg == 'tx2_recording': # tx2 ack ok
-                state = 'RECORDING'
-                send_udp_msg('pi_recording')
-                update_ui('set_to_recording')
+                meeting.start()
+                timeout = START_TIMEOUT * SECOND
                 print(state)
             elif msg.find("error") != -1:
                 state = 'ERROR'
                 message.err_msg.push('error:2')
                 print(state)
 
+                
         #start loading
         #wait 3s for ack, otherwise set to error
         elif state == 'START_LOADING':
             timeout-=1
-            if timeout == 0: # 3s timeout
+            if timeout == 0:
                 message.err_msg.push('error:3')
                 state = 'ERROR'
                 print(state)
-            msg = message.ui_msg.pop()
             
-            msg = message.udp_msg.pop()
-            if msg == 'tx2_recording': # tx2 ack ok
-                state = 'RECORDING'
-                send_udp_msg('pi_recording')
-                update_ui('set_to_recording')
-                print(state)
-            elif msg.find("error") != -1:
+            msg = udp_link.get_msg()
+            if msg.find("error") != -1:
                 state = 'ERROR'
                 message.err_msg.push('error:4')
                 print(state)
+                
+            if find_app(state) == True:
+                state = 'RECORDING'
+                udp_link.send_msg('tx2_recording')
+                print(state)
+
 
         #recording
         #wait for pause and stop which is triggered by tx2 or user. response to volume/mute button and wifi state.
         elif state == 'RECORDING':
-            msg = message.ui_msg.pop()
-            if msg == 'mute':
-                send_udp_msg('pi_mute')
-                update_ui('set_to_mute')
-            elif msg == 'unmute':
-                send_udp_msg('pi_unmute')
-                update_ui('set_to_unmute')
-            elif msg == 'volume_up':
-                send_udp_msg('pi_vol_up')
-                update_ui('set_to_vol_up')
-            elif msg == 'volume_down':
-                send_udp_msg('pi_vol_down')
-                update_ui('set_to_vol_down')
-            elif msg == 'wifi':
-                update_ui('set_to_wifi')
+            if find_app(state) == False:
+                state = 'IDLE'
+                print(state)
+                #应该做记录
                 
-            elif msg == 'pause':
+            msg = udp_link.get_msg()
+            if msg == 'pi_mute':
+                sound_control('mute')
+            elif msg == 'pi_unmute':
+                sound_control('unmute')
+            elif msg == 'pi_vol_up':
+                sound_control('vol_up')
+            elif msg == 'pi_vol_down':
+                sound_control('vol_down')
+                
+            elif msg == 'pi_pause':
                 state = 'PAUSE'
-                update_ui('set_to_pause')
-                send_udp_msg('pi_pause')
+                meeting.pause()
                 print(state)
-            elif msg == 'stop_meeting': #ui click stop
+            elif msg == 'pi_stop':
                 state = 'STOP_LOADING'
-                update_ui('set_to_stop_meeting')
-                send_udp_msg('pi_stop')
+                meeting.stop()
                 timeout = STOP_TIMEOUT * SECOND
                 print(state)
-            
-            msg = message.udp_msg.pop()
-            if  msg == 'tx2_stop_meeting': # tx2 stop meeting
-                state = 'STOP_LOADING'
-                update_ui('set_to_stop_meeting')
-                send_udp_msg('pi_stop')
-                timeout = STOP_TIMEOUT * SECOND
-                print(state)
+                
             elif msg.find("error") != -1:
                 state = 'ERROR'
                 message.err_msg.push('error:5')
                 print(state)
+                
+
         
                 
                 
         #pause
         #wait for resume and stop which is triggered by tx2 or user. response to volume/mute button and wifi state.
         elif state == 'PAUSE':
-            msg = message.ui_msg.pop()
-            if msg == 'mute':
-                update_ui('set_to_mute')
-                send_udp_msg('pi_mute')
-            elif msg == 'unmute':
-                update_ui('set_to_unmute')
-                send_udp_msg('pi_unmute')
-            elif msg == 'volume_up':
-                update_ui('set_to_vol_up')
-                send_udp_msg('pi_vol_up')
-            elif msg == 'volume_down':
-                update_ui('set_to_vol_down')
-                send_udp_msg('pi_vol_down')
-            elif msg == 'wifi':
-                update_ui('set_to_wifi')
+            msg = udp_link.get_msg()
+            if msg == 'pi_mute':
+                sound_control('mute')
+            elif msg == 'pi_unmute':
+                sound_control('unmute')
+            elif msg == 'pi_vol_up':
+                sound_control('vol_up')
+            elif msg == 'pi_vol_down':
+                sound_control('vol_down')
                 
-            elif msg == 'resume':
+            elif msg == 'pi_resume':
                 state = 'RECORDING'
-                update_ui('set_to_resume')
-                send_udp_msg('pi_resume')
+                meeting.resume()
                 print(state)
-            elif msg == 'stop_meeting':# ui click stop
+            elif msg == 'pi_stop':# ui click stop
                 state = 'STOP_LOADING'
-                update_ui('set_to_stop_meeting')
-                send_udp_msg('pi_stop')
-                timeout = STOP_TIMEOUT * SECOND
-                print(state)
-            
-            msg = message.udp_msg.pop() 
-            if msg == 'tx2_stop_meeting': # tx2 stop meeting
-                state = 'STOP_LOADING'
-                update_ui('set_to_stop_meeting')
-                send_udp_msg('pi_stop')
+                meeting.stop()
                 timeout = STOP_TIMEOUT * SECOND
                 print(state)
             elif msg.find("error") != -1:
@@ -221,24 +201,21 @@ def new_tx2_state():
         #stop meeting
         #wait 3s for ack. otherwise set to error
         elif state == 'STOP_LOADING':
-            timeout-=1
-            if timeout == 0:
-                state = 'ERROR'
-                message.err_msg.push('error:7')
-                print(state)
-                
-            msg = message.ui_msg.pop()
-            msg = message.udp_msg.pop()
-            if msg == 'tx2_idle':
+            # timeout-=1
+            # if timeout == 0:
+                # state = 'ERROR'
+                # message.err_msg.push('error:7')
+                # print(state)
+            
+            msg = udp_link.get_msg()
+            # if msg.find("error") != -1:
+                # state = 'ERROR'
+                # message.err_msg.push('error:7')
+                # print(state)
+            if find_app(state) == False:
                 state = 'IDLE'
-                update_ui('set_to_idle')
-                send_udp_msg('pi_idle')
+                udp_link.send_msg('tx2_idle')
                 print(state)
-            elif msg.find("error") != -1:
-                state = 'ERROR'
-                message.err_msg.push('error:7')
-                print(state)
-
                 
                 
 

@@ -22,9 +22,12 @@ class class_msg:
         except:
             msg = 'NONE'
         return msg
+    
+    def clear(self):
+        self.msg_list = deque([])
         
         
-udp_msg = class_msg()
+# udp_msg = class_msg()
 ui_msg = class_msg()
 err_msg = class_msg()  
 
@@ -89,6 +92,8 @@ err_msg = class_msg()
 # pi_recording
 
 # pi_pause
+
+# pi_resume
 
 # pi_stop_meeting
 

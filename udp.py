@@ -102,7 +102,6 @@ class class_client:
 def thread_host_recv(insta):
     while insta.connection == True:
         try:
-            print('recv...')
             # update client ip -->
             recv_data,address_recv = insta.socket.recvfrom(1024)
             insta.client_list.clear()
