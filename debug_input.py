@@ -24,7 +24,6 @@ def input_udp():
 
 
 def main_ui():
-    print(id(message.ui_msg))
     _thread.start_new_thread(input_ui, ())
 
 def input_ui():

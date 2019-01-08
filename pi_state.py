@@ -5,22 +5,26 @@ import udp
 import clock
 import message
 import debug_input
+import shake_hand
 
 
-        
-print(id(message.ui_msg))
+       
+                
+       
 
 debug_input.main_ui()
 
 meeting_clock = clock.my_clock()
 udp_link = udp.class_client('127.0.0.1', 61101)
 
-
+myshake = shake_hand.class_shake_hand()
     
 def update_ui(msg):
     print ('update ui:', msg)
 
+            
 
+        
     
     
 
@@ -34,6 +38,7 @@ def new_pi_state():
     READY_TIMEOUT = 3
     START_TIMEOUT = 10
     STOP_TIMEOUT = 10
+    SHAKE_TIMEOUT = 30
     timeout = READY_TIMEOUT*SECOND # 3s
     while 1:
         time.sleep(0.02) #20ms
@@ -48,7 +53,10 @@ def new_pi_state():
             msg = udp_link.get_msg()
         # for debug end        
             
-            
+        if myshake.check(state, udp_link) == False:
+            state = 'ERROR'
+            message.err_msg.push('error:shake_hand')
+            print(state)
         
                 
         #error
@@ -181,8 +189,7 @@ def new_pi_state():
                 message.err_msg.push('error:5')
                 print(state)
         
-                
-                
+        
         #pause
         #wait for resume and stop which is triggered by tx2 or user. response to volume/mute button and wifi state.
         elif state == 'PAUSE':

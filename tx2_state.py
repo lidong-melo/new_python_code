@@ -4,8 +4,9 @@ import _thread
 import udp
 
 import message
+import shake_hand
 
-debug = [1]
+debug = [0]
 
 
 class class_meeting:
@@ -24,7 +25,9 @@ def find_app(state):
             return False
         else:
             return True
-        
+
+myshake = shake_hand.class_shake_hand()
+
         
 meeting = class_meeting()
 udp_link = udp.class_host('127.0.0.1', 61101)
@@ -57,7 +60,10 @@ def new_tx2_state():
             msg = udp_link.get_msg()
         # for debug end        
             
-            
+        if myshake.check(state, udp_link) == False:
+            state = 'ERROR'
+            message.err_msg.push('error:shake_hand')
+            print(state)            
         
                 
         #error
@@ -165,10 +171,7 @@ def new_tx2_state():
                 state = 'ERROR'
                 message.err_msg.push('error:5')
                 print(state)
-                
-
-        
-                
+          
                 
         #pause
         #wait for resume and stop which is triggered by tx2 or user. response to volume/mute button and wifi state.
